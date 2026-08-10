@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 3,
+  "project": {
+    "name": "IVANRY",
+    "repository": {
+      "provider": "github",
+      "owner": "ROSHDEVAU",
+      "name": "stock-portfolio-mgmt",
+      "baseBranch": "main",
+      "branchPrefix": "codex/"
+    }
+  },
+  "controller": {
+    "artifactsRoot": "git-common:loop-engineering/runs",
+    "worktreesRoot": "../ivanry-loop-worktrees",
+    "repairLimit": 3,
+    "localConcurrency": 1,
+    "readConcurrency": 3,
+    "writeConcurrency": 1,
+    "worktreeSharedPaths": [],
+    "workerLeaseMs": 900000,
+    "workerTimeoutMs": 1800000,
+    "validationTimeoutMs": 3600000
+  },
+  "orchestration": {
+    "driver": "codex-native",
+    "enabled": true,
+    "autoStart": true,
+    "stopAt": "AWAITING_HUMAN_PREVIEW",
+    "maxAgentTurns": 24,
+    "githubWriteEnabled": true,
+    "deploymentEnabled": true
+  },
+  "providers": {
+    "codex-sol": {
+      "adapter": "codex-native",
+      "model": "gpt-5.6-sol",
+      "enabled": true,
+      "authority": "hosted",
+      "reasoningEffort": "high"
+    },
+    "codex-terra": {
+      "adapter": "codex-native",
+      "model": "gpt-5.6-terra",
+      "enabled": true,
+      "authority": "hosted",
+      "reasoningEffort": "medium"
+    },
+    "codex-luna": {
+      "adapter": "codex-native",
+      "model": "gpt-5.6-luna",
+      "enabled": true,
+      "authority": "hosted",
+      "reasoningEffort": "low"
+    },
+    "codex-spark": {
+      "adapter": "codex-native",
+      "model": "gpt-5.3-codex-spark",
+      "enabled": true,
+      "authority": "hosted",
+      "reasoningEffort": "medium",
+      "manualProfileOnly": true
+    }
+  },
+  "routing": {
+    "defaultProfile": "balanced",
+    "profiles": {
+      "balanced": {
+        "description": "Sol leads and approves release readiness; Terra implements and reviews; Luna explores, proposes tests, and verifies bounded E2E evidence.",
+        "roles": {
+          "lead": ["codex-sol"],
+          "implementer": ["codex-terra", "codex-sol"],
+          "explorer": ["codex-luna", "codex-terra"],
+          "reviewer": ["codex-terra", "codex-sol"],
+          "test-generator": ["codex-luna", "codex-terra"],
+          "e2e-verifier": ["codex-luna", "codex-terra"],
+          "release-reviewer": ["codex-sol", "codex-terra"]
+        }
+      },
+      "economy": {
+        "description": "Prefer Luna for narrow read-heavy work and Terra for implementation and decisions.",
+        "roles": {
+          "lead": ["codex-terra", "codex-sol"],
+          "implementer": ["codex-terra"],
+          "explorer": ["codex-luna", "codex-terra"],
+          "reviewer": ["codex-terra"],
+          "test-generator": ["codex-luna"],
+          "e2e-verifier": ["codex-luna"],
+          "release-reviewer": ["codex-terra", "codex-sol"]
+        }
+      },
+      "quality": {
+        "description": "Prefer Sol for ambiguous implementation and authoritative decisions.",
+        "roles": {
+          "lead": ["codex-sol"],
+          "implementer": ["codex-sol", "codex-terra"],
+          "explorer": ["codex-terra", "codex-sol"],
+          "reviewer": ["codex-sol"],
+          "test-generator": ["codex-terra", "codex-sol"],
+          "e2e-verifier": ["codex-terra", "codex-sol"],
+          "release-reviewer": ["codex-sol"]
+        }
+      },
+      "spark": {
+        "manual": true,
+        "description": "Explicit fallback used only after loopctl models use spark.",
+        "roles": {
+          "lead": ["codex-spark"],
+          "implementer": ["codex-spark"],
+          "explorer": ["codex-spark"],
+          "reviewer": ["codex-spark"],
+          "test-generator": ["codex-spark"],
+          "e2e-verifier": ["codex-spark"],
+          "release-reviewer": ["codex-spark"]
+        }
+      }
+    }
+  },
+  "workItems": {
+    "provider": "github",
+    "projectNumber": 1,
+    "statuses": {
+      "backlog": "Backlog",
+      "ready": "Ready",
+      "inProgress": "In progress",
+      "inReview": "In review",
+      "done": "Done"
+    }
+  },
+  "dispatcher": {
+    "enabled": true,
+    "adapter": "contract-only",
+    "executionEnabled": false,
+    "readyOnly": true,
+    "pollIntervalSeconds": 60,
+    "maxConcurrentRuns": 1,
+    "sandbox": "workspace-write",
+    "approveForMe": false,
+    "promptSkill": "$loop-ready-dispatcher"
+  },
+  "validation": {
+    "command": ["ivanry-loop-adapter", "validate", "application"]
+  },
+  "changeControl": {
+    "defaultClass": "standard",
+    "controlPlanePaths": ["loop.config.json", ".loop/**", ".codex/**", ".agents/**", "scripts/loop-*", "scripts/preview/**", "scripts/production/**"],
+    "classes": {
+      "trivial": {
+        "rank": 10,
+        "agentPlan": "minimal",
+        "manualReviewRequired": false,
+        "labels": ["risk:trivial", "change:copy"],
+        "titlePatterns": ["\\b(copy|wording|typo|text[- ]only|rename)\\b"],
+        "allowedPaths": ["frontend/**", "docs/**", "e2e/**"],
+        "forbiddenPaths": ["frontend/src/**/auth/**", "frontend/src/**/billing/**"],
+        "maxChangedFiles": 6,
+        "validationCommand": ["ivanry-loop-adapter", "validate", "frontend"]
+      },
+      "standard": {
+        "rank": 50,
+        "agentPlan": "standard",
+        "manualReviewRequired": false,
+        "labels": ["risk:standard"],
+        "titlePatterns": [],
+        "allowedPaths": [],
+        "forbiddenPaths": [],
+        "maxChangedFiles": 100,
+        "validationCommand": ["ivanry-loop-adapter", "validate", "application"]
+      },
+      "high-risk": {
+        "rank": 100,
+        "agentPlan": "full",
+        "manualReviewRequired": true,
+        "labels": ["risk:high", "security", "infrastructure", "identity"],
+        "titlePatterns": ["\\b(IAM|Cognito|OAuth|identity|authentication|billing|migration|infrastructure|financial history|customer data)\\b"],
+        "allowedPaths": [],
+        "forbiddenPaths": [],
+        "maxChangedFiles": 500,
+        "validationCommand": ["ivanry-loop-adapter", "validate", "application"]
+      }
+    }
+  },
+  "visualVerification": {
+    "mode": "on-difference",
+    "role": "e2e-verifier",
+    "maxScreenshots": 3,
+    "deterministicBaselineRequired": true
+  },
+  "delivery": {
+    "pullRequest": {
+      "adapter": "github-cli",
+      "executionEnabled": true,
+      "draft": false,
+      "mergeMethod": "squash",
+      "requireLoopReview": true,
+      "requireChecks": true
+    },
+    "preview": {
+      "adapter": "command",
+      "executionEnabled": true,
+      "target": {
+        "name": "isolated-connector-preview",
+        "environment": "preview",
+        "origin": "https://d2terd7fyqknvp.cloudfront.net",
+        "healthUrl": "https://d2terd7fyqknvp.cloudfront.net/health.json",
+        "verificationFacts": {
+          "accountId": "473968112686",
+          "region": "us-east-1",
+          "stackName": "PortfolioPreviewFrontendStack",
+          "bucketName": "portfoliopreviewfrontendstac-previewassets183baa02-qwqzmtlnizla",
+          "distributionId": "EG72N7W7OR4IX"
+        },
+        "resourceAllowlist": ["PortfolioPreviewFrontendStack"],
+        "verificationCommand": ["ivanry-loop-adapter", "preview", "verify"],
+        "deployCommand": ["ivanry-loop-adapter", "preview", "deploy"],
+        "rollbackCommand": ["ivanry-loop-adapter", "preview", "rollback"]
+      },
+      "syntheticFixture": {
+        "descriptor": "e2e/fixtures/connector-preview.json",
+        "runtime": "e2e/.secrets/preview-runtime.json",
+        "e2eCommand": ["ivanry-loop-adapter", "preview", "e2e"],
+        "cleanupCommand": ["ivanry-loop-adapter", "preview", "cleanup"]
+      },
+      "e2eCommand": ["ivanry-loop-adapter", "preview", "e2e"],
+      "cleanupCommand": ["ivanry-loop-adapter", "preview", "cleanup"]
+    },
+    "humanPreviewApproval": {
+      "required": true,
+      "commandPhrase": "loop deploy prod",
+      "bindToExactSha": true
+    },
+    "production": {
+      "adapter": "command",
+      "executionEnabled": true,
+      "target": {
+        "name": "ivanry-production-frontend",
+        "environment": "production",
+        "origin": "https://finance.ivanry.com",
+        "healthUrl": "https://finance.ivanry.com/health.json",
+        "verificationFacts": {
+          "accountId": "473968112686",
+          "region": "us-east-1",
+          "stackName": "PortfolioMgmtStack",
+          "bucketName": "portfoliomgmtstack-datastackfrontendbucketdef42f2f-qtmcve9ayiga",
+          "distributionId": "E2XZ59I9T4UX70"
+        },
+        "resourceAllowlist": ["ivanry-frontend-static"],
+        "verificationCommand": ["ivanry-loop-adapter", "production", "verify"]
+      },
+      "deployCommand": ["ivanry-loop-adapter", "production", "deploy"],
+      "smokeCommand": ["ivanry-loop-adapter", "production", "smoke"],
+      "rollbackCommand": ["ivanry-loop-adapter", "production", "rollback"]
+    },
+    "completionOrder": ["production-deploy", "production-smoke", "merge", "work-item-done"]
+  }
+}
