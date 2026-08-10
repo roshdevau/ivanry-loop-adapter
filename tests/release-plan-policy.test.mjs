@@ -52,7 +52,11 @@ test('the external config invokes only the adapter executable for validation and
     config.delivery.production.target.verificationCommand,
     config.delivery.production.deployCommand,
     config.delivery.production.smokeCommand,
-    config.delivery.production.rollbackCommand
+    config.delivery.production.rollbackCommand,
+    config.infrastructureRepair.validationCommand,
+    config.infrastructureRepair.deployCommand,
+    config.infrastructureRepair.verificationCommand,
+    config.infrastructureRepair.rollbackCommand
   ];
   assert.equal(commands.every(command => command[0] === 'ivanry-loop-adapter'), true);
   assert.equal(config.delivery.preview.target.origin, 'https://preview.ivanry.com');
@@ -60,6 +64,8 @@ test('the external config invokes only the adapter executable for validation and
   assert.equal(config.delivery.preview.target.verificationFacts.accountId, '109837541383');
   assert.equal(config.delivery.preview.syntheticFixture.runtime, 'e2e/.secrets/sandbox-preview-runtime.json');
   assert.deepEqual(config.delivery.production.target.resourceAllowlist, ['ivanry-frontend-static']);
+  assert.deepEqual(config.infrastructureRepair.allowedPaths, ['infrastructure/lib/stacks/ApiStack.ts']);
+  assert.equal(config.infrastructureRepair.environment, 'sandbox');
 });
 
 test('preview runtime rewriting stays in generated product artifacts', () => {
@@ -74,4 +80,18 @@ test('preview runtime rewriting stays in generated product artifacts', () => {
   assert.match(runtime, /"googleAuthEnabled": false/);
   assert.match(environment, /NEXT_PUBLIC_MCP_API_URL=https:\/\/preview\.example\.invalid\/connector/);
   assert.doesNotMatch(environment, /www\.example\.invalid/);
+});
+
+test('platform repair owns its sandbox app and cleanup evidence is current-run bound', () => {
+  const deploy = readFileSync(new URL('../scripts/platform-repair/deploy.sh', import.meta.url), 'utf8');
+  const sandboxApp = readFileSync(new URL('../scripts/platform-repair/sandbox-app.cjs', import.meta.url), 'utf8');
+  const cleanup = readFileSync(new URL('../scripts/preview/cleanup-connector-access.sh', import.meta.url), 'utf8');
+  const e2e = readFileSync(new URL('../scripts/preview/e2e-connector-access.sh', import.meta.url), 'utf8');
+  assert.match(deploy, /--app "node \$SANDBOX_APP"/);
+  assert.match(sandboxApp, /IvanrySandboxCoreStack/);
+  assert.doesNotMatch(deploy, /infrastructure\/bin\/sandbox-preview\.ts/);
+  assert.match(cleanup, /\$RUN_DIRECTORY\/preview-e2e\/connector-access-request-audit\.json/);
+  assert.match(cleanup, /x\.sourceSha!==process\.argv\[2\]/);
+  assert.doesNotMatch(cleanup, /sort \| tail/);
+  assert.match(e2e, /-newer "\$MARKER"/);
 });

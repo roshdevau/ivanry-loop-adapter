@@ -39,3 +39,19 @@ and invalidation interval for propagation, and deletes that file after E2E.
 Playwright never rotates the password immediately before browser sign-in. An existing Cognito identity is accepted only when it is the
 exact confirmed reserved address; an existing application record must also be
 marked `e2eSynthetic=true`.
+
+Confirmed sandbox AWS IAM/KMS `AccessDenied` blockers may enter the generic
+engine's governed platform-repair path. The infrastructure engineer edits only
+a separate IaC repair worktree and has no cloud or deployment authority. A
+fresh security reviewer must reject wildcards and production changes; only the
+lead may run a reviewed, target-verifying sandbox command and resume the parent
+feature after the exact denied operation passes. Production permission repair
+is never automatic.
+
+The repair lane is intentionally limited to
+`infrastructure/lib/stacks/ApiStack.ts`. Its controller validates the exact
+child PR, runs the infrastructure build, captures an executable rollback
+template, deploys only `IvanrySandboxCoreStack`, and uses IAM policy simulation
+for the exact denied action/principal/resource. A failed deploy, verification,
+or child-PR merge invokes the captured sandbox rollback and blocks the parent.
+The original feature E2E must still pass after the parent loop resumes.

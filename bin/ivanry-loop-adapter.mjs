@@ -26,9 +26,10 @@ if (area === 'validate') {
 
 const allowed = {
   preview: new Set(['verify', 'deploy', 'rollback', 'e2e', 'cleanup']),
-  production: new Set(['verify', 'deploy', 'smoke', 'rollback'])
+  production: new Set(['verify', 'deploy', 'smoke', 'rollback']),
+  'platform-repair': new Set(['validate', 'deploy', 'verify', 'rollback'])
 };
-if (!allowed[area]?.has(action)) fail('Usage: ivanry-loop-adapter <validate [frontend|application]|preview ACTION|production ACTION>');
+if (!allowed[area]?.has(action)) fail('Usage: ivanry-loop-adapter <validate [frontend|application]|preview ACTION|production ACTION|platform-repair ACTION>');
 
 const scripts = {
   preview: {
@@ -43,6 +44,12 @@ const scripts = {
     deploy: 'deploy-release.sh',
     smoke: 'smoke-release.sh',
     rollback: 'rollback-release.sh'
+  },
+  'platform-repair': {
+    validate: 'validate.sh',
+    deploy: 'deploy.sh',
+    verify: 'verify.sh',
+    rollback: 'rollback.sh'
   }
 };
 run('bash', [join(adapterRoot, 'scripts', area, scripts[area][action])], projectRoot);

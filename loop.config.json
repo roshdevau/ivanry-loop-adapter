@@ -74,7 +74,9 @@
           "reviewer": ["codex-terra", "codex-sol"],
           "test-generator": ["codex-luna", "codex-terra"],
           "e2e-verifier": ["codex-luna", "codex-terra"],
-          "release-reviewer": ["codex-sol", "codex-terra"]
+          "release-reviewer": ["codex-sol", "codex-terra"],
+          "infrastructure-engineer": ["codex-sol", "codex-terra"],
+          "security-reviewer": ["codex-sol"]
         }
       },
       "economy": {
@@ -86,7 +88,9 @@
           "reviewer": ["codex-terra"],
           "test-generator": ["codex-luna"],
           "e2e-verifier": ["codex-luna"],
-          "release-reviewer": ["codex-terra", "codex-sol"]
+          "release-reviewer": ["codex-terra", "codex-sol"],
+          "infrastructure-engineer": ["codex-terra", "codex-sol"],
+          "security-reviewer": ["codex-sol", "codex-terra"]
         }
       },
       "quality": {
@@ -98,7 +102,9 @@
           "reviewer": ["codex-sol"],
           "test-generator": ["codex-terra", "codex-sol"],
           "e2e-verifier": ["codex-terra", "codex-sol"],
-          "release-reviewer": ["codex-sol"]
+          "release-reviewer": ["codex-sol"],
+          "infrastructure-engineer": ["codex-sol"],
+          "security-reviewer": ["codex-sol"]
         }
       },
       "spark": {
@@ -111,7 +117,9 @@
           "reviewer": ["codex-spark"],
           "test-generator": ["codex-spark"],
           "e2e-verifier": ["codex-spark"],
-          "release-reviewer": ["codex-spark"]
+          "release-reviewer": ["codex-spark"],
+          "infrastructure-engineer": ["codex-spark"],
+          "security-reviewer": ["codex-spark"]
         }
       }
     }
@@ -137,6 +145,25 @@
     "sandbox": "workspace-write",
     "approveForMe": false,
     "promptSkill": "$loop-ready-dispatcher"
+  },
+  "infrastructureRepair": {
+    "enabled": true,
+    "environment": "sandbox",
+    "repository": "ROSHDEVAU/stock-portfolio-mgmt",
+    "role": "infrastructure-engineer",
+    "reviewerRole": "security-reviewer",
+    "services": ["iam", "kms"],
+    "errorCodes": ["AccessDenied", "AccessDeniedException"],
+    "stages": ["PREVIEW_DEPLOY", "PREVIEW_E2E"],
+    "requireSeparateWorktree": true,
+    "requireRollback": true,
+    "requireIndependentReview": true,
+    "allowedPaths": ["infrastructure/lib/stacks/ApiStack.ts"],
+    "forbiddenPaths": ["infrastructure/lib/stacks/PortfolioMgmtStack.ts", "infrastructure/bin/portfolio-mgmt.ts"],
+    "validationCommand": ["ivanry-loop-adapter", "platform-repair", "validate"],
+    "deployCommand": ["ivanry-loop-adapter", "platform-repair", "deploy"],
+    "verificationCommand": ["ivanry-loop-adapter", "platform-repair", "verify"],
+    "rollbackCommand": ["ivanry-loop-adapter", "platform-repair", "rollback"]
   },
   "validation": {
     "command": ["ivanry-loop-adapter", "validate", "application"]
