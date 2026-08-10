@@ -36,8 +36,9 @@ node -e 'const fs=require("fs");const [path,sha,asset]=process.argv.slice(1);fs.
 aws s3 sync "$ROOT_DIR/frontend/out" "s3://$BUCKET/" --profile "$AWS_PROFILE" --region "$AWS_REGION" --delete
 INVALIDATION_ID="$(aws cloudfront create-invalidation --profile "$AWS_PROFILE" --region "$AWS_REGION" --distribution-id "$DIST_ID" --paths '/*' --query 'Invalidation.Id' --output text)"
 aws cloudfront wait invalidation-completed --profile "$AWS_PROFILE" --region "$AWS_REGION" --distribution-id "$DIST_ID" --id "$INVALIDATION_ID"
-mkdir -p "$ROOT_DIR/.loop/preview-artifacts"
-printf '%s\n' "$ASSET_DIGEST" > "$ROOT_DIR/.loop/preview-artifacts/${SHA}.frontend.sha256"
+PREVIEW_ARTIFACTS="${LOOP_RUN_DIRECTORY:?LOOP_RUN_DIRECTORY is required}/preview/artifacts"
+mkdir -p "$PREVIEW_ARTIFACTS"
+printf '%s\n' "$ASSET_DIGEST" > "$PREVIEW_ARTIFACTS/${SHA}.frontend.sha256"
 curl --fail --silent --show-error "$ORIGIN/release.json" | node -e 'const fs=require("fs");const x=JSON.parse(fs.readFileSync(0,"utf8"));if(x.sourceSha!==process.argv[1]||x.assetSha256!==process.argv[2]||x.releaseManifestSha256!==process.argv[3])throw new Error("preview release binding mismatch")' "$SHA" "$ASSET_DIGEST" "$MANIFEST_DIGEST"
 curl --fail --silent --show-error "$ORIGIN/health.json" | node -e 'const fs=require("fs");const x=JSON.parse(fs.readFileSync(0,"utf8"));if(x.status!=="ok"||x.sourceSha!==process.argv[1]||x.assetSha256!==process.argv[2])throw new Error("preview health binding mismatch")' "$SHA" "$ASSET_DIGEST"
 printf 'preview_origin=%s\nsource_sha=%s\ninvalidation_id=%s\n' "$ORIGIN" "$SHA" "$INVALIDATION_ID"
