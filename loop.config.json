@@ -199,25 +199,25 @@
       "adapter": "command",
       "executionEnabled": true,
       "target": {
-        "name": "isolated-connector-preview",
-        "environment": "preview",
-        "origin": "https://d2terd7fyqknvp.cloudfront.net",
-        "healthUrl": "https://d2terd7fyqknvp.cloudfront.net/health.json",
+        "name": "ivanry-sandbox",
+        "environment": "sandbox",
+        "origin": "https://preview.ivanry.com",
+        "healthUrl": "https://preview.ivanry.com/api/health",
         "verificationFacts": {
-          "accountId": "473968112686",
+          "accountId": "109837541383",
           "region": "us-east-1",
-          "stackName": "PortfolioPreviewFrontendStack",
-          "bucketName": "portfoliopreviewfrontendstac-previewassets183baa02-qwqzmtlnizla",
-          "distributionId": "EG72N7W7OR4IX"
+          "stackName": "IvanrySandboxCoreStack",
+          "bucketName": "ivanrysandboxcorestack-datastackfrontendbucketdef4-1bom3mehqdxw",
+          "distributionId": "EU4BV8VEPHCX1"
         },
-        "resourceAllowlist": ["PortfolioPreviewFrontendStack"],
+        "resourceAllowlist": ["IvanrySandboxCoreStack"],
         "verificationCommand": ["ivanry-loop-adapter", "preview", "verify"],
         "deployCommand": ["ivanry-loop-adapter", "preview", "deploy"],
         "rollbackCommand": ["ivanry-loop-adapter", "preview", "rollback"]
       },
       "syntheticFixture": {
         "descriptor": "e2e/fixtures/connector-preview.json",
-        "runtime": "e2e/.secrets/preview-runtime.json",
+        "runtime": "e2e/.secrets/sandbox-preview-runtime.json",
         "e2eCommand": ["ivanry-loop-adapter", "preview", "e2e"],
         "cleanupCommand": ["ivanry-loop-adapter", "preview", "cleanup"]
       },

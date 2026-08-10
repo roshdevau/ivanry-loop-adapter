@@ -55,6 +55,10 @@ test('the external config invokes only the adapter executable for validation and
     config.delivery.production.rollbackCommand
   ];
   assert.equal(commands.every(command => command[0] === 'ivanry-loop-adapter'), true);
+  assert.equal(config.delivery.preview.target.origin, 'https://preview.ivanry.com');
+  assert.equal(config.delivery.preview.target.environment, 'sandbox');
+  assert.equal(config.delivery.preview.target.verificationFacts.accountId, '109837541383');
+  assert.equal(config.delivery.preview.syntheticFixture.runtime, 'e2e/.secrets/sandbox-preview-runtime.json');
   assert.deepEqual(config.delivery.production.target.resourceAllowlist, ['ivanry-frontend-static']);
 });
 
