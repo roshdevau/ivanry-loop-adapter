@@ -38,8 +38,11 @@ if (command === 'capture') {
     if (!target.has(object.key)) aws(['s3api', 'delete-object', '--bucket', bucket, '--key', object.key]);
   }
   for (const [key, versionId] of target) {
+    // AWS CLI performs the URI encoding itself. Pre-encoding route names such
+    // as `[portfolioId]` makes S3 look for the literal `%5B...%5D` key and
+    // incorrectly report NoSuchVersion.
     aws(['s3api', 'copy-object', '--bucket', bucket, '--key', key,
-      '--copy-source', `${encodeURIComponent(bucket)}/${key.split('/').map(encodeURIComponent).join('/')}?versionId=${encodeURIComponent(versionId)}`,
+      '--copy-source', `${bucket}/${key}?versionId=${versionId}`,
       '--metadata-directive', 'COPY']);
   }
   process.stdout.write(`${JSON.stringify({ status: 'RESTORED', objects: target.size })}\n`);

@@ -32,9 +32,10 @@ builds the exact loop SHA with public sandbox runtime values, publishes it to
 the verified sandbox bucket, and invalidates the verified distribution. It
 does not run CDK. If E2E fails, rollback restores the captured object versions.
 
-The focused E2E refreshes the one permanent reserved
+Preview preparation refreshes the one permanent reserved
 `loop.preview.e2e@portfolio.invalid` identity and its sandbox-only paid profile,
-writes credentials only to an ignored mode-0600 runtime file, and deletes that
-file after use. An existing Cognito identity is accepted only when it is the
+writes credentials only to an ignored mode-0600 runtime file, allows the build
+and invalidation interval for propagation, and deletes that file after E2E.
+Playwright never rotates the password immediately before browser sign-in. An existing Cognito identity is accepted only when it is the
 exact confirmed reserved address; an existing application record must also be
 marked `e2eSynthetic=true`.

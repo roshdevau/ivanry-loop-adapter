@@ -12,6 +12,11 @@ test "$AWS_PROFILE" = 'ivanry-sandbox' && test "$AWS_REGION" = 'us-east-1'
 test "$(git -C "$ROOT_DIR" rev-parse HEAD)" = "$SHA"
 test -z "$(git -C "$ROOT_DIR" status --porcelain=v1 --untracked-files=all)"
 bash "$ADAPTER_ROOT/scripts/preview/verify-target.sh" >/dev/null
+RUNTIME="$ROOT_DIR/e2e/.secrets/sandbox-preview-runtime.json"
+if [[ ! -f "$RUNTIME" ]]; then
+  LOOP_ALLOW_SANDBOX_IDENTITY_WRITE=true node "$ADAPTER_ROOT/scripts/preview/provision-synthetic.mjs"
+fi
+node -e 'const fs=require("fs");const r=JSON.parse(fs.readFileSync(process.argv[1]));if(r.environment!=="sandbox"||r.baseUrl!=="https://preview.ivanry.com"||!r.email?.endsWith(".invalid")||r.e2eSynthetic!==true)throw new Error("sandbox runtime is invalid")' "$RUNTIME"
 BUCKET="$(aws cloudformation describe-stacks --profile "$AWS_PROFILE" --region "$AWS_REGION" --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue | [0]" --output text)"
 DIST_ID="$(aws cloudformation describe-stacks --profile "$AWS_PROFILE" --region "$AWS_REGION" --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue | [0]" --output text)"
 test "$BUCKET" != 'None' && test "$DIST_ID" != 'None'

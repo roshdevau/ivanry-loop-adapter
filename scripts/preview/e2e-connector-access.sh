@@ -8,7 +8,6 @@ test "${AWS_PROFILE:-ivanry-sandbox}" = 'ivanry-sandbox'
 test "${AWS_REGION:-us-east-1}" = 'us-east-1'
 bash "$ADAPTER_ROOT/scripts/preview/verify-target.sh" >/dev/null
 trap 'rm -f "$RUNTIME"' EXIT
-LOOP_ALLOW_SANDBOX_IDENTITY_WRITE=true node "$ADAPTER_ROOT/scripts/preview/provision-synthetic.mjs"
 test -f "$RUNTIME"
 node -e 'const fs=require("fs");const r=JSON.parse(fs.readFileSync(process.argv[1]));if(r.environment!=="sandbox"||r.baseUrl!=="https://preview.ivanry.com"||!r.email?.endsWith(".invalid")||r.e2eSynthetic!==true)throw new Error("sandbox runtime is invalid")' "$RUNTIME"
 (cd "$ROOT_DIR" && E2E_BASE_URL='https://preview.ivanry.com' E2E_RUNTIME_PATH="$RUNTIME" npx playwright test --config="$ROOT_DIR/e2e/playwright.config.ts" "$ROOT_DIR/e2e/specs/connector-access-settings.spec.ts")

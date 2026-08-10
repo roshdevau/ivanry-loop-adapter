@@ -11,7 +11,12 @@ test "$AWS_PROFILE" = 'ivanry-sandbox' && test "$AWS_REGION" = 'us-east-1'
 bash "$ADAPTER_ROOT/scripts/preview/verify-target.sh" >/dev/null
 DIST_ID="$(aws cloudformation describe-stacks --profile "$AWS_PROFILE" --region "$AWS_REGION" --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue | [0]" --output text)"
 test "$DIST_ID" != 'None'
-node "$ADAPTER_ROOT/scripts/preview/frontend-snapshot.mjs" restore
+SNAPSHOT="${LOOP_RUN_DIRECTORY:?LOOP_RUN_DIRECTORY is required}/preview/sandbox-frontend-before.json"
+if [[ -f "$SNAPSHOT" ]]; then
+  node "$ADAPTER_ROOT/scripts/preview/frontend-snapshot.mjs" restore
+else
+  printf 'rollback=NO_FRONTEND_WRITE\nsource_sha=%s\n' "$SHA"
+fi
 INVALIDATION_ID="$(aws cloudfront create-invalidation --profile "$AWS_PROFILE" --region "$AWS_REGION" --distribution-id "$DIST_ID" --paths '/*' --query 'Invalidation.Id' --output text)"
 aws cloudfront wait invalidation-completed --profile "$AWS_PROFILE" --region "$AWS_REGION" --distribution-id "$DIST_ID" --id "$INVALIDATION_ID"
 rm -f "$ROOT_DIR/e2e/.secrets/sandbox-preview-runtime.json"
