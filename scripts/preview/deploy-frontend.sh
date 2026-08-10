@@ -7,10 +7,13 @@ AWS_PROFILE="${AWS_PROFILE:-roshanpersonal}"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 STACK_NAME="PortfolioPreviewFrontendStack"
 SHA="$(node "$ADAPTER_ROOT/scripts/preview/resolve-release.mjs" --sha)"
+RUNTIME_SOURCE="$ROOT_DIR/e2e/.secrets/runtime.json"
 test "$AWS_PROFILE" = "roshanpersonal"
 test "$AWS_REGION" = "us-east-1"
 test "$(git -C "$ROOT_DIR" rev-parse HEAD)" = "$SHA"
 test -z "$(git -C "$ROOT_DIR" status --porcelain=v1 --untracked-files=all)"
+test -f "$RUNTIME_SOURCE"
+node -e 'const fs=require("fs");const r=JSON.parse(fs.readFileSync(process.argv[1]));if(!r.email?.endsWith(".invalid")||r.desktopSession?.e2eSynthetic!==true)throw new Error("preview requires the reserved .invalid e2eSynthetic runtime before deployment")' "$RUNTIME_SOURCE"
 test "$(aws sts get-caller-identity --profile "$AWS_PROFILE" --region "$AWS_REGION" --query Account --output text)" = "473968112686"
 
 (cd "$ADAPTER_ROOT/infrastructure" && AWS_PROFILE="$AWS_PROFILE" AWS_REGION="$AWS_REGION" CDK_DEFAULT_REGION="$AWS_REGION" IVANRY_PREVIEW_SHA="$SHA" npx cdk --app 'npx ts-node --prefer-ts-exts bin/preview-frontend.ts' deploy "$STACK_NAME" --exclusively --require-approval never)
