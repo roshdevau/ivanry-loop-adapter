@@ -25,6 +25,8 @@ if node -e 'const x=require(process.argv[1]);process.exit(x.lanes.includes("ivan
   bash "$ADAPTER_ROOT/scripts/preview/deploy-frontend.sh"
 fi
 if node -e 'const x=require(process.argv[1]);process.exit(x.lanes.includes("ivanry-research-backend")?0:1)' "$PLAN_PATH"; then
+  test "$(git -C "$ROOT_DIR" rev-parse HEAD)" = "$LOOP_RELEASE_SHA"
+  test -z "$(git -C "$ROOT_DIR" status --porcelain=v1 --untracked-files=all)"
   AWS_PROFILE="$AWS_PROFILE" AWS_REGION="$AWS_REGION" IVANRY_RELEASE_STACK="$STACK_NAME" IVANRY_RELEASE_ACCOUNT="$ACCOUNT" node "$ADAPTER_ROOT/scripts/release/stack-snapshot.mjs" capture
   (cd "$ROOT_DIR/infrastructure" && AWS_PROFILE="$AWS_PROFILE" AWS_REGION="$AWS_REGION" CDK_ACCOUNT="$ACCOUNT" CDK_REGION="$AWS_REGION" SANDBOX_CERTIFICATE_ARN="$CERTIFICATE_ARN" npx cdk --app "node $ADAPTER_ROOT/scripts/platform-repair/sandbox-app.cjs" deploy "$STACK_NAME" --exclusively --require-approval never)
   bash "$ADAPTER_ROOT/scripts/preview/verify-target.sh" >/dev/null

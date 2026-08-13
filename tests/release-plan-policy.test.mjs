@@ -108,3 +108,15 @@ test('platform repair owns its sandbox app and cleanup evidence is current-run b
   assert.doesNotMatch(cleanup, /sort \| tail/);
   assert.match(e2e, /-newer "\$MARKER"/);
 });
+
+test('backend deploy and every rollback reassert the exact target contract', () => {
+  const previewDeploy = readFileSync(new URL('../scripts/preview/deploy-release.sh', import.meta.url), 'utf8');
+  const previewRollback = readFileSync(new URL('../scripts/preview/rollback-preview.sh', import.meta.url), 'utf8');
+  const productionRollback = readFileSync(new URL('../scripts/production/rollback-release.sh', import.meta.url), 'utf8');
+  assert.match(previewDeploy, /git -C "\$ROOT_DIR" rev-parse HEAD/);
+  assert.match(previewDeploy, /git -C "\$ROOT_DIR" status --porcelain/);
+  assert.match(previewRollback, /LOOP_DELIVERY_TARGET:-\}" = 'ivanry-sandbox'/);
+  assert.match(previewRollback, /LOOP_RESOURCE_ALLOWLIST:-\}" = '\["IvanrySandboxCoreStack"\]'/);
+  assert.match(productionRollback, /production_require_contract/);
+  assert.match(productionRollback, /production_verify_aws_target/);
+});

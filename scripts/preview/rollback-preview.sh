@@ -8,6 +8,8 @@ AWS_REGION="${AWS_REGION:-us-east-1}"
 STACK_NAME='IvanrySandboxCoreStack'
 SHA="$(node "$ADAPTER_ROOT/scripts/preview/resolve-release.mjs" --sha)"
 test "$AWS_PROFILE" = 'ivanry-sandbox' && test "$AWS_REGION" = 'us-east-1'
+test "${LOOP_DELIVERY_TARGET:-}" = 'ivanry-sandbox'
+test "${LOOP_RESOURCE_ALLOWLIST:-}" = '["IvanrySandboxCoreStack"]'
 bash "$ADAPTER_ROOT/scripts/preview/verify-target.sh" >/dev/null
 DIST_ID="$(aws cloudformation describe-stacks --profile "$AWS_PROFILE" --region "$AWS_REGION" --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue | [0]" --output text)"
 test "$DIST_ID" != 'None'
