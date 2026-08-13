@@ -35,9 +35,11 @@ app.node.setContext('enableGoogleAuth', false);
 app.node.setContext('ivanrySelfSignUpEnabled', false);
 app.node.setContext('ivanryScheduledJobsEnabled', false);
 app.node.setContext('ivanryBrokerSyncEnabled', false);
-// The runtime is an already deployed, separately retained Sandbox stack.  Core
-// consumes its output; this app never deploys the runtime in the normal lane.
-app.node.setContext('ivanryBedrockEnabled', true);
+// The runtime is an already deployed, separately retained Sandbox stack. Core
+// may invoke that exact runtime, but it must not gain direct Bedrock model
+// authority as part of this narrowly scoped delivery lane.
+app.node.setContext('ivanryBedrockEnabled', false);
+app.node.setContext('ivanryQuickInsightsEnabled', true);
 app.node.setContext('ivanryBillingEnabled', false);
 app.node.setContext('twelveDataSecretArn', '');
 app.node.setContext('twelveDataEnabled', false);
