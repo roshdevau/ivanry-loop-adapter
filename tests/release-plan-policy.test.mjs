@@ -39,6 +39,19 @@ test('backend, infrastructure, release scripts and sensitive frontend paths fail
   ]);
 });
 
+test('the one reviewed Quick Scan backend path maps to its bounded deployment lane', () => {
+  assert.deepEqual(classifyProductionFiles([
+    'backend/functions/portfolios/insights/index.ts',
+    'e2e/specs/sandbox-quick-scan-export.spec.ts'
+  ]), {
+    lanes: ['ivanry-research-backend'],
+    deployable: ['backend/functions/portfolios/insights/index.ts'],
+    ignored: ['e2e/specs/sandbox-quick-scan-export.spec.ts'],
+    manualOnly: [],
+    unknown: []
+  });
+});
+
 test('the external config invokes only the adapter executable for validation and delivery', () => {
   const config = JSON.parse(readFileSync(new URL('../loop.config.json', import.meta.url), 'utf8'));
   const commands = [
@@ -63,7 +76,7 @@ test('the external config invokes only the adapter executable for validation and
   assert.equal(config.delivery.preview.target.environment, 'sandbox');
   assert.equal(config.delivery.preview.target.verificationFacts.accountId, '109837541383');
   assert.equal(config.delivery.preview.syntheticFixture.runtime, 'e2e/.secrets/sandbox-preview-runtime.json');
-  assert.deepEqual(config.delivery.production.target.resourceAllowlist, ['ivanry-frontend-static']);
+  assert.deepEqual(config.delivery.production.target.resourceAllowlist, ['PortfolioMgmtStack']);
   assert.deepEqual(config.infrastructureRepair.allowedPaths, ['infrastructure/lib/stacks/ApiStack.ts']);
   assert.equal(config.infrastructureRepair.environment, 'sandbox');
 });
@@ -89,9 +102,23 @@ test('platform repair owns its sandbox app and cleanup evidence is current-run b
   const e2e = readFileSync(new URL('../scripts/preview/e2e-connector-access.sh', import.meta.url), 'utf8');
   assert.match(deploy, /--app "node \$SANDBOX_APP"/);
   assert.match(sandboxApp, /IvanrySandboxCoreStack/);
+  assert.match(sandboxApp, /ivanryBedrockEnabled', false/);
+  assert.match(sandboxApp, /ivanryQuickInsightsEnabled', true/);
   assert.doesNotMatch(deploy, /infrastructure\/bin\/sandbox-preview\.ts/);
   assert.match(cleanup, /\$RUN_DIRECTORY\/preview-e2e\/connector-access-request-audit\.json/);
   assert.match(cleanup, /x\.sourceSha!==process\.argv\[2\]/);
   assert.doesNotMatch(cleanup, /sort \| tail/);
   assert.match(e2e, /-newer "\$MARKER"/);
+});
+
+test('backend deploy and every rollback reassert the exact target contract', () => {
+  const previewDeploy = readFileSync(new URL('../scripts/preview/deploy-release.sh', import.meta.url), 'utf8');
+  const previewRollback = readFileSync(new URL('../scripts/preview/rollback-preview.sh', import.meta.url), 'utf8');
+  const productionRollback = readFileSync(new URL('../scripts/production/rollback-release.sh', import.meta.url), 'utf8');
+  assert.match(previewDeploy, /git -C "\$ROOT_DIR" rev-parse HEAD/);
+  assert.match(previewDeploy, /git -C "\$ROOT_DIR" status --porcelain/);
+  assert.match(previewRollback, /LOOP_DELIVERY_TARGET:-\}" = 'ivanry-sandbox'/);
+  assert.match(previewRollback, /LOOP_RESOURCE_ALLOWLIST:-\}" = '\["IvanrySandboxCoreStack"\]'/);
+  assert.match(productionRollback, /production_require_contract/);
+  assert.match(productionRollback, /production_verify_aws_target/);
 });

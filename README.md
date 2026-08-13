@@ -3,8 +3,8 @@
 This private repository is the IVANRY-specific boundary around the generic
 [`ROSHDEVAU/loop-engineering`](https://github.com/ROSHDEVAU/loop-engineering)
 controller. It owns IVANRY's model routing, GitHub Project mapping, validation
-commands, the `preview.ivanry.com` sandbox contract, and narrowly scoped static-frontend
-production adapter.
+commands, the `preview.ivanry.com` sandbox contract, and narrowly scoped
+production delivery lanes.
 
 The stock portfolio repository intentionally contains no loop configuration,
 dispatcher, preview, production, or release-plan scripts. A local registry
@@ -19,18 +19,37 @@ loopctl doctor
 `ivanry-loop-adapter` is installed locally with `npm link`. Every command uses
 `LOOP_PROJECT_ROOT` supplied by `loopctl`; it never guesses another checkout.
 
-The automatic production lane accepts only mapped static frontend changes plus
-non-deploying documentation/E2E evidence. Backend, infrastructure, identity,
-access-control, financial-data, billing, migration, and unknown paths fail
+The automatic production lanes accept mapped static frontend changes and one
+reviewed Quick Scan outcome: `backend/functions/portfolios/insights/index.ts`.
+The latter updates only the existing core application stack and is protected by
+the same exact-SHA preview, focused E2E, rollback snapshot, and explicit human
+production approval. Every other backend, infrastructure, identity,
+access-control, financial-data, billing, migration, and unknown path fails
 closed for a separately reviewed lane. No deployment runs during installation
 or tests.
 
+```mermaid
+flowchart LR
+  C[Loop controller] --> P[Exact PR SHA + base]
+  P --> R{Mapped lane?}
+  R -->|frontend| F[Versioned web assets]
+  R -->|Quick Scan only| B[Existing Core stack]
+  R -->|anything else| X[Fail closed]
+  F --> S[Sandbox E2E]
+  B --> S
+  S --> H[Human preview approval]
+  H --> D[Production deploy + smoke]
+  D --> M[Merge and Done]
+```
+
 Preview delivery is bound to AWS account `109837541383`, profile
 `ivanry-sandbox`, `us-east-1`, and the verified `IvanrySandboxCoreStack`
-outputs. A frontend-only preview captures the current versioned S3 object set,
-builds the exact loop SHA with public sandbox runtime values, publishes it to
-the verified sandbox bucket, and invalidates the verified distribution. It
-does not run CDK. If E2E fails, rollback restores the captured object versions.
+outputs. Frontend preview captures the current versioned S3 object set, builds
+the exact loop SHA with public sandbox runtime values, publishes it to the
+verified sandbox bucket, and invalidates the verified distribution. The Quick
+Scan lane instead deploys only the existing `IvanrySandboxCoreStack`, after
+capturing its deployed CloudFormation template. If E2E fails, rollback restores
+the captured frontend objects and/or the exact pre-release stack template.
 
 Preview preparation refreshes the one permanent reserved
 `loop.preview.e2e@portfolio.invalid` identity and its sandbox-only paid profile,

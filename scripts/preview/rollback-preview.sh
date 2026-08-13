@@ -8,10 +8,16 @@ AWS_REGION="${AWS_REGION:-us-east-1}"
 STACK_NAME='IvanrySandboxCoreStack'
 SHA="$(node "$ADAPTER_ROOT/scripts/preview/resolve-release.mjs" --sha)"
 test "$AWS_PROFILE" = 'ivanry-sandbox' && test "$AWS_REGION" = 'us-east-1'
+test "${LOOP_DELIVERY_TARGET:-}" = 'ivanry-sandbox'
+test "${LOOP_RESOURCE_ALLOWLIST:-}" = '["IvanrySandboxCoreStack"]'
 bash "$ADAPTER_ROOT/scripts/preview/verify-target.sh" >/dev/null
 DIST_ID="$(aws cloudformation describe-stacks --profile "$AWS_PROFILE" --region "$AWS_REGION" --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue | [0]" --output text)"
 test "$DIST_ID" != 'None'
 SNAPSHOT="${LOOP_RUN_DIRECTORY:?LOOP_RUN_DIRECTORY is required}/preview/sandbox-frontend-before.json"
+PLAN_PATH="${LOOP_RUN_DIRECTORY}/preview/release-plan.json"
+if [[ -s "$PLAN_PATH" ]] && node -e 'const x=require(process.argv[1]);process.exit(x.lanes.includes("ivanry-research-backend")?0:1)' "$PLAN_PATH"; then
+  AWS_PROFILE="$AWS_PROFILE" AWS_REGION="$AWS_REGION" IVANRY_RELEASE_STACK="$STACK_NAME" IVANRY_RELEASE_ACCOUNT='109837541383' node "$ADAPTER_ROOT/scripts/release/stack-snapshot.mjs" restore
+fi
 if [[ -f "$SNAPSHOT" ]]; then
   node "$ADAPTER_ROOT/scripts/preview/frontend-snapshot.mjs" restore
 else

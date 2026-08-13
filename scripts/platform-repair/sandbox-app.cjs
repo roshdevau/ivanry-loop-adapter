@@ -15,6 +15,7 @@ const { PortfolioLegalDataStack } = require(path.join(stacks, 'PortfolioLegalDat
 const { PortfolioMarketDataApiStack } = require(path.join(stacks, 'PortfolioMarketDataApiStack.ts'));
 const { PortfolioMarketDataDataStack } = require(path.join(stacks, 'PortfolioMarketDataDataStack.ts'));
 const { PortfolioMgmtStack } = require(path.join(stacks, 'PortfolioMgmtStack.ts'));
+const { PortfolioQuickInsightsRuntimeStack } = require(path.join(stacks, 'PortfolioQuickInsightsRuntimeStack.ts'));
 const { PortfolioTaxPlanningDataStack } = require(path.join(stacks, 'PortfolioTaxPlanningDataStack.ts'));
 const { SecurityBaselineStack } = require(path.join(stacks, 'SecurityBaselineStack.ts'));
 
@@ -34,7 +35,11 @@ app.node.setContext('enableGoogleAuth', false);
 app.node.setContext('ivanrySelfSignUpEnabled', false);
 app.node.setContext('ivanryScheduledJobsEnabled', false);
 app.node.setContext('ivanryBrokerSyncEnabled', false);
+// The runtime is an already deployed, separately retained Sandbox stack. Core
+// may invoke that exact runtime, but it must not gain direct Bedrock model
+// authority as part of this narrowly scoped delivery lane.
 app.node.setContext('ivanryBedrockEnabled', false);
+app.node.setContext('ivanryQuickInsightsEnabled', true);
 app.node.setContext('ivanryBillingEnabled', false);
 app.node.setContext('twelveDataSecretArn', '');
 app.node.setContext('twelveDataEnabled', false);
@@ -62,6 +67,10 @@ const taxPlanning = new PortfolioTaxPlanningDataStack(app, 'IvanrySandboxTaxPlan
 taxPlanning.addDependency(security);
 const legalData = new PortfolioLegalDataStack(app, 'IvanrySandboxLegalDataStack', { env, description: 'Ivanry Sandbox legal-document and audit persistence' });
 legalData.addDependency(security);
+const quickInsightsRuntime = new PortfolioQuickInsightsRuntimeStack(app, 'IvanrySandboxQuickInsightsRuntimeStack', {
+  env,
+  description: 'Ivanry Sandbox retained Quick Scan AgentCore runtime',
+});
 const core = new PortfolioMgmtStack(app, 'IvanrySandboxCoreStack', {
   env,
   description: 'Ivanry isolated Sandbox portfolio core and preview frontend',
@@ -72,8 +81,8 @@ const core = new PortfolioMgmtStack(app, 'IvanrySandboxCoreStack', {
   corporateEventsTable: corporateEvents.eventsTable,
   taxCarriedLossesTable: taxPlanning.carriedLossesTable,
   legalDocumentsTable: legalData.legalDocumentsTable,
+  insightsAgentRuntimeArn: quickInsightsRuntime.orchestratorRuntimeArn,
   webhookReceiptsTable: security.webhookReceiptsTable,
-  applicationDataKey: security.appDataKey,
   providerSecretsKey: security.providerSecretsKey,
   cdrConsentsTable: security.consentTable,
   deletionRequestsTable: security.deletionRequestsTable,
@@ -87,4 +96,5 @@ core.addDependency(brokerData);
 core.addDependency(corporateEvents);
 core.addDependency(taxPlanning);
 core.addDependency(legalData);
+core.addDependency(quickInsightsRuntime);
 app.synth();
