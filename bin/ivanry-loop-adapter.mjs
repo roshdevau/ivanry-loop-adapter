@@ -34,7 +34,7 @@ if (!allowed[area]?.has(action)) fail('Usage: ivanry-loop-adapter <validate [fro
 const scripts = {
   preview: {
     verify: 'verify-target.sh',
-    deploy: 'deploy-frontend.sh',
+    deploy: 'deploy-release.sh',
     rollback: 'rollback-preview.sh',
     e2e: 'e2e-connector-access.sh',
     cleanup: 'cleanup-connector-access.sh'

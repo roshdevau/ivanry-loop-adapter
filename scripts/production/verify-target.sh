@@ -27,7 +27,7 @@ process.stdout.write(`${JSON.stringify({
   distributionId,
   host,
   environment: "production",
-  resourceAllowlist: ["ivanry-frontend-static"],
+  resourceAllowlist: ["PortfolioMgmtStack"],
   sourceSha: sha
 })}\n`);
 ' "$PRODUCTION_ACCOUNT_ID" "$PRODUCTION_AWS_REGION" "$PRODUCTION_STACK_NAME" "$PRODUCTION_BUCKET" "$PRODUCTION_DISTRIBUTION_ID" "finance.ivanry.com" "$SHA"

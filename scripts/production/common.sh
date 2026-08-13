@@ -11,7 +11,7 @@ PRODUCTION_STACK_NAME="PortfolioMgmtStack"
 PRODUCTION_BUCKET="portfoliomgmtstack-datastackfrontendbucketdef42f2f-qtmcve9ayiga"
 PRODUCTION_DISTRIBUTION_ID="E2XZ59I9T4UX70"
 PRODUCTION_ORIGIN="https://finance.ivanry.com"
-PRODUCTION_RESOURCE_ALLOWLIST='["ivanry-frontend-static"]'
+PRODUCTION_RESOURCE_ALLOWLIST='["PortfolioMgmtStack"]'
 export PRODUCTION_ADAPTER_ROOT PRODUCTION_ROOT_DIR PRODUCTION_AWS_PROFILE PRODUCTION_AWS_REGION PRODUCTION_ACCOUNT_ID PRODUCTION_STACK_NAME PRODUCTION_BUCKET PRODUCTION_DISTRIBUTION_ID PRODUCTION_ORIGIN PRODUCTION_RESOURCE_ALLOWLIST
 
 production_release_sha() {
@@ -35,7 +35,7 @@ production_require_contract() {
   test "$PRODUCTION_AWS_PROFILE" = "roshanpersonal"
   test "$PRODUCTION_AWS_REGION" = "us-east-1"
   test -z "${IVANRY_PREVIEW_ORIGIN:-}"
-  test "${LOOP_DELIVERY_TARGET:-}" = "ivanry-production-frontend"
+  test "${LOOP_DELIVERY_TARGET:-}" = "ivanry-production"
   test "${LOOP_RESOURCE_ALLOWLIST:-}" = "$PRODUCTION_RESOURCE_ALLOWLIST"
   test -n "${LOOP_RELEASE_MANIFEST:-}"
   test "$LOOP_RELEASE_MANIFEST" = "$(production_run_directory)/release/manifest.json"

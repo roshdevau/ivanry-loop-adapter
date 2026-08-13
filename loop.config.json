@@ -260,7 +260,7 @@
       "adapter": "command",
       "executionEnabled": true,
       "target": {
-        "name": "ivanry-production-frontend",
+        "name": "ivanry-production",
         "environment": "production",
         "origin": "https://finance.ivanry.com",
         "healthUrl": "https://finance.ivanry.com/health.json",
@@ -271,7 +271,7 @@
           "bucketName": "portfoliomgmtstack-datastackfrontendbucketdef42f2f-qtmcve9ayiga",
           "distributionId": "E2XZ59I9T4UX70"
         },
-        "resourceAllowlist": ["ivanry-frontend-static"],
+        "resourceAllowlist": ["PortfolioMgmtStack"],
         "verificationCommand": ["ivanry-loop-adapter", "production", "verify"]
       },
       "deployCommand": ["ivanry-loop-adapter", "production", "deploy"],
